@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Justice Chain - Document Verification</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'justice-blue': '#1e40af',
+                        'justice-green': '#059669',
+                        'justice-yellow': '#d97706',
+                        'justice-red': '#dc2626'
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Header -->
+    <header class="bg-gradient-to-r from-justice-blue to-blue-600 text-white shadow-lg">
+        <div class="container mx-auto px-4 py-6">
+            <div class="flex items-center space-x-3">
+                <div class="w-8 h-8 bg-white rounded-full flex items-center justify-center">
+                    <span class="text-justice-blue font-bold text-lg">⚖</span>
+                </div>
+                <h1 class="text-3xl font-bold">Justice Chain</h1>
+                <span class="text-blue-200 text-sm">AI-Powered Document Verification</span>
+            </div>
+        </div>
+    </header>
+
+    <div class="container mx-auto px-4 py-8">
+        <div class="max-w-4xl mx-auto">
+            <!-- Upload Section -->
+            <div class="bg-white rounded-xl shadow-lg p-8 mb-8">
+                <h2 class="text-2xl font-bold text-gray-800 mb-6 flex items-center">
+                    <span class="mr-2">📄</span>
+                    Upload Document for Verification
+                </h2>
+                
+                <form id="uploadForm" enctype="multipart/form-data" class="space-y-6">
+                    <!-- Document Type Selection -->
+                    <div>
+                        <label for="docType" class="block text-sm font-medium text-gray-700 mb-2">
+                            Document Type
+                        </label>
+                        <select id="docType" name="doc_type" required 
+                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-justice-blue focus:border-transparent transition-all duration-200">
+                            <option value="">Select Document Type</option>
+                            <option value="aadhaar">🆔 Aadhaar Card</option>
+                            <option value="pan">💳 PAN Card</option>
+                            <option value="stamp">📋 Stamp Paper</option>
+                            <option value="court">⚖️ Court Order/Summon</option>
+                            <option value="bank">🏦 Bank Statement</option>
+                        </select>
+                    </div>
+
+                    <!-- File Upload -->
+                    <div>
+                        <label for="fileUpload" class="block text-sm font-medium text-gray-700 mb-2">
+                            Upload Document
+                        </label>
+                        <div class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-justice-blue transition-colors duration-200">
+                            <input type="file" id="fileUpload" name="file" accept=".pdf,.jpg,.jpeg,.png,.gif,.bmp,.tiff" required
+                                   class="hidden">
+                            <div id="dropZone" class="cursor-pointer">
+                                <div class="text-4xl mb-2">📁</div>
+                                <p class="text-gray-600 mb-2">Click to upload or drag and drop</p>
+                                <p class="text-sm text-gray-500">PDF, JPG, PNG, GIF, BMP, TIFF (Max 10MB)</p>
+                            </div>
+                            <div id="fileInfo" class="hidden">
+                                <div class="text-2xl mb-2">✅</div>
+                                <p id="fileName" class="text-gray-700 font-medium"></p>
+                                <p id="fileSize" class="text-sm text-gray-500"></p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Options -->
+                    <div class="flex flex-wrap gap-4">
+                        <label class="flex items-center space-x-2 cursor-pointer">
+                            <input type="checkbox" id="runAI" name="run_ai_checks" checked 
+                                   class="w-4 h-4 text-justice-blue bg-gray-100 border-gray-300 rounded focus:ring-justice-blue">
+                            <span class="text-sm text-gray-700">🤖 Run AI Forgery Detection</span>
+                        </label>
+                        <label class="flex items-center space-x-2 cursor-pointer">
+                            <input type="checkbox" id="prepareBlockchain" name="prepare_blockchain" 
+                                   class="w-4 h-4 text-justice-blue bg-gray-100 border-gray-300 rounded focus:ring-justice-blue">
+                            <span class="text-sm text-gray-700">⛓️ Prepare Blockchain Payload</span>
+                        </label>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <button type="submit" id="submitBtn"
+                            class="w-full bg-gradient-to-r from-justice-blue to-blue-600 text-white py-3 px-6 rounded-lg font-medium hover:from-blue-600 hover:to-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed">
+                        <span id="submitText">🔍 Verify Document</span>
+                        <span id="loadingText" class="hidden">
+                            <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            Analyzing...
+                        </span>
+                    </button>
+                </form>
+            </div>
+
+            <!-- Results Section -->
+            <div id="resultsSection" class="hidden">
+                <!-- Status Card -->
+                <div id="statusCard" class="bg-white rounded-xl shadow-lg p-8 mb-6">
+                    <h3 class="text-2xl font-bold text-gray-800 mb-6">Verification Results</h3>
+                    
+                    <!-- Status Badge -->
+                    <div class="text-center mb-6">
+                        <div id="statusBadge" class="inline-flex items-center px-6 py-3 rounded-full text-lg font-bold">
+                            <span id="statusIcon" class="mr-2 text-2xl"></span>
+                            <span id="statusText"></span>
+                        </div>
+                    </div>
+
+                    <!-- Confidence Bar -->
+                    <div class="mb-6">
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="text-sm font-medium text-gray-700">Confidence Level</span>
+                            <span id="confidenceText" class="text-sm font-bold"></span>
+                        </div>
+                        <div class="w-full bg-gray-200 rounded-full h-4">
+                            <div id="confidenceBar" class="h-4 rounded-full transition-all duration-1000 ease-out"></div>
+                        </div>
+                    </div>
+
+                    <!-- Document Info -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                        <div class="bg-gray-50 p-4 rounded-lg">
+                            <div class="font-medium text-gray-700">File Hash</div>
+                            <div id="fileHash" class="text-gray-600 break-all font-mono text-xs"></div>
+                        </div>
+                        <div class="bg-gray-50 p-4 rounded-lg">
+                            <div class="font-medium text-gray-700">Timestamp</div>
+                            <div id="timestamp" class="text-gray-600"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- AI Analysis Details -->
+                <div id="aiAnalysisCard" class="hidden bg-white rounded-xl shadow-lg p-8 mb-6">
+                    <h4 class="text-xl font-bold text-gray-800 mb-4 flex items-center">
+                        <span class="mr-2">🤖</span>
+                        AI Analysis Details
+                    </h4>
+                    
+                    <!-- Checks Chart -->
+                    <div class="mb-6">
+                        <canvas id="checksChart" width="400" height="200"></canvas>
+                    </div>
+
+                    <!-- Issues List -->
+                    <div id="issuesList" class="hidden">
+                        <h5 class="font-medium text-gray-700 mb-2">Detected Issues:</h5>
+                        <ul id="issues" class="list-disc list-inside text-sm text-gray-600 space-y-1"></ul>
+                    </div>
+                </div>
+
+                <!-- Blockchain Payload -->
+                <div id="blockchainCard" class="hidden bg-white rounded-xl shadow-lg p-8">
+                    <h4 class="text-xl font-bold text-gray-800 mb-4 flex items-center">
+                        <span class="mr-2">⛓️</span>
+                        Blockchain Payload
+                        <span id="blockchainStatus" class="ml-auto"></span>
+                    </h4>
+                    <div class="bg-gray-900 rounded-lg p-4 overflow-x-auto">
+                        <pre id="blockchainPayload" class="text-green-400 text-sm"></pre>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Error Section -->
+            <div id="errorSection" class="hidden bg-red-50 border border-red-200 rounded-xl p-6">
+                <div class="flex items-center">
+                    <span class="text-red-500 text-2xl mr-3">⚠️</span>
+                    <div>
+                        <h3 class="text-lg font-medium text-red-800">Upload Failed</h3>
+                        <p id="errorMessage" class="text-red-700"></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-white py-8 mt-16">
+        <div class="container mx-auto px-4 text-center">
+            <p class="text-gray-400">Justice Chain - Secure Document Verification System</p>
+            <p class="text-gray-500 text-sm mt-2">Powered by AI • Built for Trust • Secured by Blockchain</p>
+        </div>
+    </footer>
+
+    <script>
+        // Global variables
+        let uploadForm = document.getElementById('uploadForm');
+        let fileUpload = document.getElementById('fileUpload');
+        let dropZone = document.getElementById('dropZone');
+        let fileInfo = document.getElementById('fileInfo');
+        let submitBtn = document.getElementById('submitBtn');
+        let submitText = document.getElementById('submitText');
+        let loadingText = document.getElementById('loadingText');
+        let resultsSection = document.getElementById('resultsSection');
+        let errorSection = document.getElementById('errorSection');
+
+        // File upload handling
+        dropZone.addEventListener('click', () => fileUpload.click());
+        
+        fileUpload.addEventListener('change', handleFileSelect);
+        
+        // Drag and drop
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('border-justice-blue', 'bg-blue-50');
+        });
+        
+        dropZone.addEventListener('dragleave', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('border-justice-blue', 'bg-blue-50');
+        });
+        
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('border-justice-blue', 'bg-blue-50');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                fileUpload.files = files;
+                handleFileSelect();
+            }
+        });
+
+        function handleFileSelect() {
+            const file = fileUpload.files[0];
+            if (file) {
+                document.getElementById('fileName').textContent = file.name;
+                document.getElementById('fileSize').textContent = formatFileSize(file.size);
+                dropZone.classList.add('hidden');
+                fileInfo.classList.remove('hidden');
+            }
+        }
+
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        // Form submission
+        uploadForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const formData = new FormData(uploadForm);
+            formData.set('run_ai_checks', document.getElementById('runAI').checked);
+            formData.set('prepare_blockchain', document.getElementById('prepareBlockchain').checked);
+            
+            // Show loading state
+            submitBtn.disabled = true;
+            submitText.classList.add('hidden');
+            loadingText.classList.remove('hidden');
+            resultsSection.classList.add('hidden');
+            errorSection.classList.add('hidden');
+            
+            try {
+                const response = await fetch('/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    displayResults(result);
+                } else {
+                    showError(result.detail || 'Upload failed');
+                }
+            } catch (error) {
+                showError('Network error: ' + error.message);
+            } finally {
+                // Reset loading state
+                submitBtn.disabled = false;
+                submitText.classList.remove('hidden');
+                loadingText.classList.add('hidden');
+            }
+        });
+
+        function displayResults(result) {
+            resultsSection.classList.remove('hidden');
+            
+            // Display status
+            if (result.ai_analysis) {
+                const analysis = result.ai_analysis;
+                const status = analysis.status;
+                const confidence = analysis.confidence;
+                
+                // Status badge
+                const statusBadge = document.getElementById('statusBadge');
+                const statusIcon = document.getElementById('statusIcon');
+                const statusText = document.getElementById('statusText');
+                
+                statusText.textContent = status.toUpperCase();
+                
+                if (status === 'authentic') {
+                    statusBadge.className = 'inline-flex items-center px-6 py-3 rounded-full text-lg font-bold bg-green-100 text-green-800';
+                    statusIcon.textContent = '✅';
+                } else if (status === 'suspicious') {
+                    statusBadge.className = 'inline-flex items-center px-6 py-3 rounded-full text-lg font-bold bg-yellow-100 text-yellow-800';
+                    statusIcon.textContent = '⚠️';
+                } else if (status === 'forged') {
+                    statusBadge.className = 'inline-flex items-center px-6 py-3 rounded-full text-lg font-bold bg-red-100 text-red-800';
+                    statusIcon.textContent = '❌';
+                }
+                
+                // Confidence bar
+                const confidenceText = document.getElementById('confidenceText');
+                const confidenceBar = document.getElementById('confidenceBar');
+                
+                confidenceText.textContent = confidence + '%';
+                confidenceBar.style.width = confidence + '%';
+                
+                if (confidence <= 10) {
+                    confidenceBar.className = 'h-4 rounded-full transition-all duration-1000 ease-out bg-green-500';
+                } else if (confidence <= 55) {
+                    confidenceBar.className = 'h-4 rounded-full transition-all duration-1000 ease-out bg-yellow-500';
+                } else {
+                    confidenceBar.className = 'h-4 rounded-full transition-all duration-1000 ease-out bg-red-500';
+                }
+                
+                // Show AI analysis details
+                if (analysis.checks) {
+                    document.getElementById('aiAnalysisCard').classList.remove('hidden');
+                    createChecksChart(analysis.checks);
+                }
+                
+                // Show issues if any
+                if (analysis.detected_issues && analysis.detected_issues.length > 0) {
+                    const issuesList = document.getElementById('issuesList');
+                    const issues = document.getElementById('issues');
+                    issuesList.classList.remove('hidden');
+                    issues.innerHTML = '';
+                    analysis.detected_issues.forEach(issue => {
+                        const li = document.createElement('li');
+                        li.textContent = issue;
+                        issues.appendChild(li);
+                    });
+                }
+            }
+            
+            // Display file info
+            document.getElementById('fileHash').textContent = result.hash;
+            document.getElementById('timestamp').textContent = new Date(result.timestamp).toLocaleString();
+            
+            // Show blockchain payload if available
+            if (result.blockchain_payload) {
+                const blockchainCard = document.getElementById('blockchainCard');
+                const blockchainStatus = document.getElementById('blockchainStatus');
+                const blockchainPayload = document.getElementById('blockchainPayload');
+                
+                blockchainCard.classList.remove('hidden');
+                
+                if (result.blockchain_ready) {
+                    blockchainStatus.innerHTML = '<span class="bg-green-100 text-green-800 px-2 py-1 rounded-full text-sm">✅ Ready</span>';
+                } else {
+                    blockchainStatus.innerHTML = '<span class="bg-red-100 text-red-800 px-2 py-1 rounded-full text-sm">❌ Invalid</span>';
+                }
+                
+                blockchainPayload.textContent = JSON.stringify(result.blockchain_payload, null, 2);
+            }
+        }
+
+        function createChecksChart(checks) {
+            const ctx = document.getElementById('checksChart').getContext('2d');
+            
+            const labels = Object.keys(checks).map(key => 
+                key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())
+            );
+            const data = Object.values(checks).map(value => value ? 1 : 0);
+            const colors = Object.values(checks).map(value => 
+                value ? '#059669' : '#dc2626'
+            );
+            
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Check Results',
+                        data: data,
+                        backgroundColor: colors,
+                        borderColor: colors,
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 1,
+                            ticks: {
+                                stepSize: 1,
+                                callback: function(value) {
+                                    return value === 1 ? 'Pass' : 'Fail';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function showError(message) {
+            errorSection.classList.remove('hidden');
+            document.getElementById('errorMessage').textContent = message;
+        }
+    </script>
+</body>
+</html>
